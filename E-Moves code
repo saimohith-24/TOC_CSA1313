@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_STATES 10
+#define MAX_SYMBOLS 5
+#define MAX_TRANSITIONS 3
+
+int trans_table[MAX_STATES][MAX_SYMBOLS][MAX_TRANSITIONS];
+int e_closure[MAX_STATES][MAX_STATES];
+int ptr, state;
+
+// Recursive function to find ε-closure
+void find_e_closure(int x) {
+    int i = 0, j, target, is_present;
+
+    while (trans_table[x][0][i] != -1) {
+        target = trans_table[x][0][i];
+        i++;
+
+        // Check if target is already in e_closure[state]
+        is_present = 0;
+        for (j = 0; j < ptr; j++) {
+            if (e_closure[state][j] == target) {
+                is_present = 1;
+                break;
+            }
+        }
+
+        if (!is_present) {
+            e_closure[state][ptr++] = target;
+            find_e_closure(target); // Recursive call
+        }
+    }
+}
+
+int main() {
+    int num_states, num_symbols;
+    char symbols[MAX_SYMBOLS];
+    int i, j, k, n;
+
+    // Initialize transition table with -1
+    for (i = 0; i < MAX_STATES; i++)
+        for (j = 0; j < MAX_SYMBOLS; j++)
+            for (k = 0; k < MAX_TRANSITIONS; k++)
+                trans_table[i][j][k] = -1;
+
+    printf("Enter number of states: ");
+    scanf("%d", &num_states);
+
+    printf("Enter number of input symbols (including 'e' for ε): ");
+    scanf("%d", &num_symbols);
+
+    printf("Enter symbols (e.g. e01): ");
+    scanf("%s", symbols);
+
+    // Input transitions
+    for (i = 0; i < num_states; i++) {
+        for (j = 0; j < num_symbols; j++) {
+            printf("Enter number of transitions from state %d on '%c': ", i, symbols[j]);
+            scanf("%d", &n);
+            for (k = 0; k < n; k++) {
+                printf("Transition %d from state %d on '%c': ", k+1, i, symbols[j]);
+                scanf("%d", &trans_table[i][j][k]);
+            }
+        }
+    }
+
+    // Initialize ε-closure with -1
+    for (i = 0; i < MAX_STATES; i++)
+        for (j = 0; j < MAX_STATES; j++)
+            e_closure[i][j] = -1;
+
+    // Calculate ε-closure
+    for (i = 0; i < num_states; i++) {
+        state = i;
+        ptr = 0;
+        e_closure[i][ptr++] = i; // Every state is in its own ε-closure
+        find_e_closure(i);
+    }
+
+    // Output ε-closures
+    printf("\nEpsilon closures:\n");
+    for (i = 0; i < num_states; i++) {
+        printf("ε-closure(%d): { ", i);
+        for (j = 0; j < MAX_STATES && e_closure[i][j] != -1; j++) {
+            printf("%d ", e_closure[i][j]);
+        }
+        printf("}\n");
+    }
+
+    return 0;
+}
